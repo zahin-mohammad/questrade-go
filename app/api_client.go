@@ -8,20 +8,26 @@ import (
 	"time"
 )
 
-
-type QuestradeAPIClient struct{
-	ctx context.Context
+type QuestradeAPIClient struct {
+	ctx          context.Context
 	refreshToken string
 	ApiServerURL string
 	*http.Client
 }
 
+// TODO: Doc for parameters
+
 func NewOauthClient(
-	ctx context.Context, refreshToken string,
+	ctx context.Context,
+	refreshToken string,
+	retryTimeInSeconds *time.Duration,
+	maxRetry *int,
+	checkRetry ...func(context.Context, *http.Response, error) (bool, error),
 ) (*QuestradeAPIClient, error) {
 	// Inject custom http client via context
-	// TODO: Create retry client
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Timeout: 2 * time.Second})
+	ctx = context.WithValue(
+		ctx, oauth2.HTTPClient,
+		NewRetryRateLimitClient(retryTimeInSeconds, maxRetry, checkRetry...))
 	questradeAPIClient := QuestradeAPIClient{ctx: ctx, refreshToken: refreshToken}
 	tokenSource := oauth2.ReuseTokenSource(nil, questradeAPIClient)
 	token, err := tokenSource.Token()

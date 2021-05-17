@@ -2,4 +2,8 @@ module github.com/zahin-mohammad/questrade-go
 
 go 1.15
 
-require golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
+require (
+	github.com/hashicorp/go-retryablehttp v0.7.0
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+)
