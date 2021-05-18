@@ -10,6 +10,7 @@ import (
 
 type QuestradeAPIClient struct {
 	ctx          context.Context
+	isTest       bool
 	refreshToken string
 	ApiServerURL string
 	*http.Client
@@ -17,8 +18,9 @@ type QuestradeAPIClient struct {
 
 // TODO: Doc for parameters
 
-func NewOauthClient(
+func NewQuestradeAPIClient(
 	ctx context.Context,
+	isTest bool,
 	refreshToken string,
 	retryTimeInSeconds *time.Duration,
 	maxRetry *int,
@@ -28,8 +30,8 @@ func NewOauthClient(
 	ctx = context.WithValue(
 		ctx, oauth2.HTTPClient,
 		NewRetryRateLimitClient(retryTimeInSeconds, maxRetry, checkRetry...))
-	questradeAPIClient := QuestradeAPIClient{ctx: ctx, refreshToken: refreshToken}
-	tokenSource := oauth2.ReuseTokenSource(nil, questradeAPIClient)
+	questradeAPIClient := QuestradeAPIClient{ctx: ctx, isTest: isTest, refreshToken: refreshToken}
+	tokenSource := oauth2.ReuseTokenSource(nil, &questradeAPIClient)
 	token, err := tokenSource.Token()
 	if err != nil {
 		return nil, err
