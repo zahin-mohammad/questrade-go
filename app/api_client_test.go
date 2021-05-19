@@ -14,6 +14,8 @@ const (
 	ACCOUNT_ID_NUMBER           = "ACCOUNT_ID_NUMBER"
 )
 
+// Testing done with prod because their test app is unstable...
+
 func TestNewOauthClient(t *testing.T) {
 	// SETUP
 	env, _ := godotenv.Read(ENV_FILE)

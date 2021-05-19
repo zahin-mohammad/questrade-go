@@ -1,6 +1,18 @@
 package app
 
-import "time"
+import (
+	"context"
+	"net/http"
+	"time"
+)
+
+type QuestradeAPIClient struct {
+	ctx          context.Context
+	isTest       bool
+	refreshToken string
+	apiURL       string
+	*http.Client
+}
 
 type errorResponse struct {
 	Code    int    `json:"code"`
