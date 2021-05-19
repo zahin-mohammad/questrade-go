@@ -2,6 +2,11 @@ package app
 
 import "time"
 
+type errorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type authResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
@@ -21,13 +26,21 @@ type AccountActivitiesResponse struct {
 		Description     string    `json:"description"`
 		Currency        string    `json:"currency"`
 		Quantity        int       `json:"quantity"`
-		Price           int       `json:"price"`
-		GrossAmount     int       `json:"grossAmount"`
-		Commission      int       `json:"commission"`
+		Price           float64   `json:"price"`
+		GrossAmount     float64   `json:"grossAmount"`
+		Commission      float64   `json:"commission"`
 		NetAmount       float64   `json:"netAmount"`
 		Type            string    `json:"type"`
 	} `json:"activities"`
 }
+
+type OrderStateENUM string
+
+const (
+	OrderStateAll    = OrderStateENUM("All")
+	OrderStateOpen   = OrderStateENUM("Open")
+	OrderStateClosed = OrderStateENUM("Closed")
+)
 
 type AccountOrdersResponse struct {
 	Orders []struct {
@@ -61,7 +74,7 @@ type AccountOrdersResponse struct {
 		SecondaryRoute           string         `json:"secondaryRoute"`
 		OrderRoute               string         `json:"orderRoute"`
 		VenueHoldingOrder        string         `json:"venueHoldingOrder"`
-		ComissionCharged         int            `json:"comissionCharged"`
+		ComissionCharged         float64        `json:"comissionCharged"`
 		ExchangeOrderID          string         `json:"exchangeOrderId"`
 		IsSignificantShareHolder bool           `json:"isSignificantShareHolder"`
 		IsInsider                bool           `json:"isInsider"`
@@ -101,11 +114,11 @@ type AccountExecutionsResponse struct {
 		Notes                    string    `json:"notes"`
 		Venue                    string    `json:"venue"`
 		TotalCost                float64   `json:"totalCost"`
-		OrderPlacementCommission int       `json:"orderPlacementCommission"`
+		OrderPlacementCommission float64   `json:"orderPlacementCommission"`
 		Commission               float64   `json:"commission"`
-		ExecutionFee             int       `json:"executionFee"`
-		SecFee                   int       `json:"secFee"`
-		CanadianExecutionFee     int       `json:"canadianExecutionFee"`
+		ExecutionFee             float64   `json:"executionFee"`
+		SecFee                   float64   `json:"secFee"`
+		CanadianExecutionFee     float64   `json:"canadianExecutionFee"`
 		ParentID                 int       `json:"parentId"`
 	} `json:"executions"`
 }
@@ -120,7 +133,7 @@ type AccountBalancesResponse struct {
 type Balance struct {
 	Currency          string  `json:"currency"`
 	Cash              float64 `json:"cash"`
-	MarketValue       int     `json:"marketValue"`
+	MarketValue       float64 `json:"marketValue"`
 	TotalEquity       float64 `json:"totalEquity"`
 	BuyingPower       float64 `json:"buyingPower"`
 	MaintenanceExcess float64 `json:"maintenanceExcess"`
@@ -132,13 +145,13 @@ type AccountPositionsResponse struct {
 		Symbol             string  `json:"symbol"`
 		SymbolId           int     `json:"symbolId"`
 		OpenQuantity       int     `json:"openQuantity"`
-		CurrentMarketValue int     `json:"currentMarketValue"`
+		CurrentMarketValue float64 `json:"currentMarketValue"`
 		CurrentPrice       float64 `json:"currentPrice"`
 		AverageEntryPrice  float64 `json:"averageEntryPrice"`
-		ClosedPnl          int     `json:"closedPnl"`
-		OpenPnl            int     `json:"openPnl"`
-		TotalCost          bool    `json:"totalCost"`
-		IsRealTime         string  `json:"isRealTime"`
+		ClosedPnl          float64 `json:"closedPnl"`
+		OpenPnl            float64 `json:"openPnl"`
+		TotalCost          float64 `json:"totalCost"`
+		IsRealTime         bool    `json:"isRealTime"`
 		IsUnderReorg       bool    `json:"isUnderReorg"`
 	} `json:"positions"`
 }

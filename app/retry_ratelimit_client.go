@@ -2,10 +2,12 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/time/rate"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
 )
 
@@ -56,6 +58,16 @@ func DefaultCheckRetry(
 		} else {
 			log.Printf("retry error: StatusCode %d\n", resp.StatusCode)
 		}
+		requestDump, err := httputil.DumpRequest(resp.Request, true)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(requestDump))
+		responseDump, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(responseDump))
 		return true, err
 	}
 	return false, nil

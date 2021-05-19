@@ -14,13 +14,13 @@ import (
 
 // Inspired by: https://github.com/arianitu/go-questrade-oauth2/blob/master/questrade.go
 
-func (apiClient *QuestradeAPIClient) Token() (*oauth2.Token, error) {
-	oauthClient := oauth2.NewClient(apiClient.ctx, nil)
+func (client *QuestradeAPIClient) Token() (*oauth2.Token, error) {
+	oauthClient := oauth2.NewClient(client.ctx, nil)
 	apiURL := oauth2URL
-	if apiClient.isTest {
+	if client.isTest {
 		apiURL = oauth2URLTest
 	}
-	resp, err := oauthClient.Get(apiURL + apiClient.refreshToken)
+	resp, err := oauthClient.Get(apiURL + client.refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (apiClient *QuestradeAPIClient) Token() (*oauth2.Token, error) {
 	if secs := authResp.ExpiresIn; secs > 0 {
 		token.Expiry = time.Now().Add(time.Duration(secs) * time.Second)
 	}
-	apiClient.refreshToken = authResp.RefreshToken
-	fmt.Println(apiClient.refreshToken)
+	client.refreshToken = authResp.RefreshToken
+	fmt.Println(client.refreshToken)
 	return token, nil
 }

@@ -3,6 +3,7 @@ package app
 import "time"
 
 const (
+	version       = "v1/"
 	oauth2URL     = "https://login.questrade.com/oauth2/token?grant_type=refresh_token&refresh_token="
 	oauth2URLTest = "https://practicelogin.questrade.com/oauth2/token?grant_type=refresh_token&refresh_token="
 	apiServerKey  = "api_server"
@@ -19,12 +20,13 @@ const (
 
 // Account Endpoints
 const (
-	GetAccountActivities = "accounts/%s/activities"    //accountID
-	GetAccountOrders     = "accounts/%s/orders?ids=%s" //accountID, comma delimited orderID's
-	GetAccountExecutions = "accounts/%s/executions"    //accountID
-	GetAccountBalances   = "accounts/%s/balances"      //accountID
-	GetAccountPositions  = "accounts/%s/positions"     //accountID
-	GetAccounts          = "accounts"
+	getAccountOrders     = "accounts/%s/orders" //accountID, comma delimited orderID's
+	getAccounts          = "accounts"
+	getAccountBalances   = "accounts/%s/balances"   //accountID
+	getAccountPositions  = "accounts/%s/positions"  //accountID
+	getAccountActivities = "accounts/%s/activities" //accountID
+	getAccountExecutions = "accounts/%s/executions" //accountID
+
 )
 
 // Market Endpoints
