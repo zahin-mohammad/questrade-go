@@ -62,6 +62,7 @@ func DefaultCheckRetry(
 		if err != nil {
 			fmt.Println(err)
 		}
+		// TODO: Remove these prints
 		fmt.Println(string(requestDump))
 		responseDump, err := httputil.DumpResponse(resp, true)
 		if err != nil {

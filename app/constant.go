@@ -40,5 +40,3 @@ const (
 	GetMarketSymbolSearch    = "symbols/search"
 	GetMarketSymbols         = "symbols/%s" //symboldID
 )
-
-const ()
