@@ -31,12 +31,16 @@ const (
 
 // Market Endpoints
 const (
+	getMarkets               = "markets"
+	getMarketQuotes          = "markets/quotes"     //symbolID
 	GetMarketCandles         = "markets/candles/%s" //symbolID
 	GetMarketQuoteStrategies = "markets/quotes/strategies"
 	GetMarketQuoteOptions    = "markets/quotes/options"
-	GetMarketQuotes          = "markets/quotes/%s" //symbolID
-	GetMarkets               = "markets"
-	GetMarketOptions         = "symbols/%s/options" //symbolID
-	GetMarketSymbolSearch    = "symbols/search"
-	GetMarketSymbols         = "symbols/%s" //symboldID
+)
+
+const (
+	getSymbolsSearch = "symbols/search"
+	getSymbols       = "symbols"            //symboldID
+	getSymbolOptions = "symbols/%d/options" //symbolID
+
 )

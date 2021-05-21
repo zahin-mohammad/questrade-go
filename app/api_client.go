@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/oauth2"
+	"golang.org/x/time/rate"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -21,9 +23,9 @@ func NewQuestradeAPIClient(
 	ctx context.Context,
 	isTest bool,
 	refreshToken string,
-	retryTimeInSeconds *time.Duration,
-	maxRetry *int,
-	checkRetry ...func(context.Context, *http.Response, error) (bool, error),
+	retryTimeInSeconds *time.Duration, // optional
+	maxRetry *int, // optional
+	checkRetry ...func(context.Context, *http.Response, error) (bool, error), // optional
 ) (*QuestradeAPIClient, error) {
 	// Inject custom http client via context
 	ctx = context.WithValue(
@@ -44,125 +46,67 @@ func NewQuestradeAPIClient(
 	return &questradeAPIClient, nil
 }
 
-func (client *QuestradeAPIClient) GetAccounts() (*AccountsResponse, error) {
-	url := fmt.Sprintf("%s%s%s", client.apiURL, version, getAccounts)
-	body, err := client.doRequest(url)
-	if err != nil {
-		return nil, err
-	}
-	var accountsResponse AccountsResponse
-	if err = json.Unmarshal(body, &accountsResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
-	}
-	return &accountsResponse, nil
-}
-
-func (client *QuestradeAPIClient) GetAccountBalances(
-	accountID string,
-) (*AccountBalancesResponse, error) {
-	uri := fmt.Sprintf(getAccountBalances, accountID)
-	urlString := fmt.Sprintf("%s%s%s", client.apiURL, version, uri)
-	body, err := client.doRequest(urlString)
-	if err != nil {
-		return nil, err
-	}
-	var accountBalancesResponse AccountBalancesResponse
-	if err = json.Unmarshal(body, &accountBalancesResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
-	}
-	return &accountBalancesResponse, nil
-}
-
-func (client *QuestradeAPIClient) GetAccountPositions(
-	accountID string,
-) (*AccountPositionsResponse, error) {
-	uri := fmt.Sprintf(getAccountPositions, accountID)
-	urlString := fmt.Sprintf("%s%s%s", client.apiURL, version, uri)
-	body, err := client.doRequest(urlString)
-	if err != nil {
-		return nil, err
-	}
-	var accountPositionsResponse AccountPositionsResponse
-	if err = json.Unmarshal(body, &accountPositionsResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
-	}
-	return &accountPositionsResponse, nil
-}
-
-func (client *QuestradeAPIClient) GetAccountActivities(
-	accountID string,
-	startTime time.Time,
-	endTime time.Time,
-) (*AccountActivitiesResponse, error) {
-	uri := fmt.Sprintf(getAccountActivities, accountID)
-	params := url.Values{}
-	params.Add("startTime", startTime.Format(time.RFC3339))
-	params.Add("endTime", endTime.Format(time.RFC3339))
-	urlString := fmt.Sprintf("%s%s%s?%s", client.apiURL, version, uri, params.Encode())
-	body, err := client.doRequest(urlString)
-	if err != nil {
-		return nil, err
-	}
-	var accountActivitiesResponse AccountActivitiesResponse
-	if err = json.Unmarshal(body, &accountActivitiesResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
-	}
-	return &accountActivitiesResponse, nil
-}
-
-func (client *QuestradeAPIClient) GetAccountExecutions(
-	accountID string,
-	startTime time.Time,
-	endTime time.Time,
-) (*AccountExecutionsResponse, error) {
-	uri := fmt.Sprintf(getAccountExecutions, accountID)
-	params := url.Values{}
-	params.Add("startTime", startTime.Format(time.RFC3339))
-	params.Add("endTime", endTime.Format(time.RFC3339))
-	urlString := fmt.Sprintf("%s%s%s?%s", client.apiURL, version, uri, params.Encode())
-	body, err := client.doRequest(urlString)
-	if err != nil {
-		return nil, err
-	}
-	var accountExecutionsResponse AccountExecutionsResponse
-	if err = json.Unmarshal(body, &accountExecutionsResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
-	}
-	return &accountExecutionsResponse, nil
-}
-
-func (client *QuestradeAPIClient) GetAccountOrders(
-	accountID string,
-	startTime time.Time,
-	endTime time.Time,
-	stateFilter OrderStateENUM,
-	orderIDs ...int,
-) (*AccountOrdersResponse, error) {
-	uri := fmt.Sprintf(getAccountOrders, accountID)
-	params := url.Values{}
-	if len(orderIDs) > 0 {
-		params.Add("ids", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(orderIDs)), ","), "[]"))
+// NewRetryRateLimitClient : a rate limited retry client.
+// All parameters are optional. If nil/zero values are passed in default values will be used.
+func NewRetryRateLimitClient(
+	retryTimeInSeconds *time.Duration,
+	maxRetry *int,
+	checkRetry ...func(context.Context, *http.Response, error) (bool, error),
+) *http.Client {
+	// https://www.questrade.com/api/documentation/rate-limiting
+	rateLimiter := rate.NewLimiter(rate.Every(time.Second/20), 1)
+	retryClient := retryablehttp.NewClient()
+	if len(checkRetry) == 1 {
+		retryClient.CheckRetry = checkRetry[0]
 	} else {
-		params.Add("startTime", startTime.Format(time.RFC3339))
-		params.Add("endTime", endTime.Format(time.RFC3339))
-		params.Add("stateFilter", string(stateFilter))
+		retryClient.CheckRetry = DefaultCheckRetry
 	}
-	urlString := fmt.Sprintf("%s%s%s?%s", client.apiURL, version, uri, params.Encode())
-	body, err := client.doRequest(urlString)
-	if err != nil {
-		return nil, err
+	if retryTimeInSeconds != nil {
+		retryClient.RetryWaitMin = *retryTimeInSeconds
+	} else {
+		retryClient.RetryWaitMin = defaultRetryMin
 	}
-	var accountOrdersResponse AccountOrdersResponse
-	if err = json.Unmarshal(body, &accountOrdersResponse); err != nil {
-		log.Println(string(body))
-		return nil, err
+	if maxRetry != nil {
+		retryClient.RetryMax = *maxRetry
+	} else {
+		retryClient.RetryMax = defaultMaxRetry
 	}
-	return &accountOrdersResponse, nil
+	retryClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
+		if err := rateLimiter.Wait(context.Background()); err != nil {
+			log.Printf("ERROR WAITING FOR LIMIT: %s\n", err.Error())
+			return
+		}
+	}
+	return retryClient.StandardClient()
+}
+
+func DefaultCheckRetry(
+	_ context.Context, resp *http.Response, err error,
+) (bool, error) {
+	// Don't retry non-get requests
+	if resp.Request.Method != GET && resp.Request.Method != "" {
+		return false, nil
+	}
+	if resp.StatusCode >= http.StatusBadRequest {
+		if err != nil {
+			log.Printf("retry error: StatusCode %d Error %s\n", resp.StatusCode, err.Error())
+		} else {
+			log.Printf("retry error: StatusCode %d\n", resp.StatusCode)
+		}
+		requestDump, err := httputil.DumpRequest(resp.Request, true)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// TODO: Remove these prints
+		fmt.Println(string(requestDump))
+		responseDump, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(responseDump))
+		return true, err
+	}
+	return false, nil
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +162,12 @@ func (client *QuestradeAPIClient) doRequest(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Remove dump
+	responseDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(responseDump))
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

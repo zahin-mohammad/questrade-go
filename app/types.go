@@ -283,8 +283,8 @@ type MarketsResponse struct {
 	} `json:"markets"`
 }
 
-type MarketOptionsResponse struct {
-	Options []struct {
+type SymbolOptionsResponse struct {
+	OptionChain []struct {
 		ExpiryDate         string `json:"expiryDate"`
 		Description        string `json:"description"`
 		ListingExchange    string `json:"listingExchange"`
@@ -298,11 +298,11 @@ type MarketOptionsResponse struct {
 			} `json:"chainPerStrikePrice"`
 			Multiplier int `json:"multiplier"`
 		} `json:"chainPerRoot"`
-	} `json:"options"`
+	} `json:"optionChain"`
 }
 
-type MarketSymbolSearchResponse struct {
-	Symbol []struct {
+type SymbolSearchResponse struct {
+	Symbols []struct {
 		Symbol          string `json:"symbol"`
 		SymbolID        int    `json:"symbolId"`
 		Description     string `json:"description"`
@@ -311,10 +311,10 @@ type MarketSymbolSearchResponse struct {
 		IsTradable      bool   `json:"isTradable"`
 		IsQuotable      bool   `json:"isQuotable"`
 		Currency        string `json:"currency"`
-	} `json:"symbol"`
+	} `json:"symbols"`
 }
 
-type MarketSymbolsResponse struct {
+type SymbolsResponse struct {
 	Symbols []struct {
 		Symbol                     string      `json:"symbol"`
 		SymbolID                   int         `json:"symbolId"`

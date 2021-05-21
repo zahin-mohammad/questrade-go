@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -12,6 +13,9 @@ const (
 	ENV_FILE                    = "../.env"
 	QUESTRADE_REFRESH_TOKEN_KEY = "QUESTRADE_REFRESH_TOKEN"
 	ACCOUNT_ID_NUMBER           = "ACCOUNT_ID_NUMBER"
+	BMO_SYMBOL_ID               = 9292
+	AAPL_SYMBOL_ID              = 8049
+	BMOOF_SYMBOL_ID             = 35518868
 )
 
 // Testing done with prod because their test app is unstable...
@@ -32,6 +36,10 @@ func TestNewOauthClient(t *testing.T) {
 	t.Run("Initialization", func(t *testing.T) {
 		assert.NotEmpty(t, questradeAPIClient.refreshToken)
 	})
+
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Accounts
+	//////////////////////////////////////////////////////////////////////////////////////////
 
 	t.Run("GetAccounts", func(t *testing.T) {
 		resp, err := questradeAPIClient.GetAccounts()
@@ -92,6 +100,68 @@ func TestNewOauthClient(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, len(resp.Orders), len(respFromIDS.Orders))
 		//fmt.Println(PrettyJSON(resp))
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Markets
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	t.Run("GetMarkets", func(t *testing.T) {
+		resp, err := questradeAPIClient.GetMarkets()
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Markets)
+		fmt.Println(PrettyJSON(resp))
+	})
+
+	t.Run("GetMarketsQuotes", func(t *testing.T) {
+		symb := BMOOF_SYMBOL_ID
+		resp, err := questradeAPIClient.GetMarketsQuotes(&symb)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Quotes)
+		fmt.Println(PrettyJSON(resp))
+
+		resp, err = questradeAPIClient.GetMarketsQuotes(nil, BMO_SYMBOL_ID, BMOOF_SYMBOL_ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Quotes)
+		fmt.Println(PrettyJSON(resp))
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Symbol
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	t.Run("GetSymbolOptions", func(t *testing.T) {
+		resp, err := questradeAPIClient.GetSymbolOptions(BMO_SYMBOL_ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.OptionChain)
+		fmt.Println(PrettyJSON(resp))
+	})
+
+	t.Run("GetSymbolsSearch", func(t *testing.T) {
+		resp, err := questradeAPIClient.GetSymbolsSearch("BMO")
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Symbols)
+		fmt.Println(PrettyJSON(resp))
+	})
+
+	t.Run("GetSymbols", func(t *testing.T) {
+		symb := AAPL_SYMBOL_ID
+		resp, err := questradeAPIClient.GetSymbols(&symb)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Symbols)
+		fmt.Println(PrettyJSON(resp))
+
+		resp, err = questradeAPIClient.GetSymbols(nil, AAPL_SYMBOL_ID, BMO_SYMBOL_ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+		assert.NotEmpty(t, resp.Symbols)
+		fmt.Println(PrettyJSON(resp))
 	})
 
 	// TEARDOWN
